@@ -10,7 +10,7 @@ This client provides an Express.js-like interface for building HTTP servers in G
 
 ## Features
 
-- Express.js-style routing
+- Express.js style routing
 - Middleware support
 - Minimal API surface
 - Standard library based
