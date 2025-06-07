@@ -37,12 +37,6 @@ func main() {
 }
 ```
 
-## Installation
-
-```bash
-go get github.com/yourusername/go-http-client
-```
-
 ## Status
 
 This project is currently a work in progress and is not recommended for production use.
