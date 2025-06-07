@@ -1,8 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"go-http-client/client"
+	"net/http"
+)
 
 func main() {
+	app := client.New()
 
-	fmt.Println("Hello World")
+	app.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello")
+	})
+
+	app.Start()
+
 }
