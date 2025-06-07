@@ -11,13 +11,9 @@ func New() *App {
 	}
 }
 
-func (app *App) AppendRoute(routeKey Route, handler http.HandlerFunc) {
-	app.routes[routeKey] = handler
-}
-
 func (app *App) Get(routeName string, handler http.HandlerFunc) {
 	routeKey := Route{routeName: routeName, method: Get}
-	app.AppendRoute(routeKey, handler)
+	app.appendRoute(routeKey, handler)
 }
 
 func (app *App) Start() {
