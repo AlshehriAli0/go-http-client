@@ -12,13 +12,14 @@ const (
 	Delete Method = "delete"
 )
 
-type Route struct {
+type RouteEntry struct {
+	pattern   string
 	routeName string
 	method    Method
 }
 
 type App struct {
-	routes map[Route]HandlerFunc
+	routes map[RouteEntry]HandlerFunc
 }
 
 type HandlerFunc func(*Context)
@@ -26,4 +27,5 @@ type HandlerFunc func(*Context)
 type Context struct {
 	Writer  http.ResponseWriter
 	Request *http.Request
+	Params  map[string]string
 }

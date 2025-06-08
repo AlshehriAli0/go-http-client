@@ -14,8 +14,9 @@ func main() {
 
 	testJson := Test{Name: "Ali", Job: "dev"}
 
-	app.Get("/", func(ctx *client.Context) {
-		ctx.Send("Nice")
+	app.Get("/:id", func(ctx *client.Context) {
+		param := ctx.Param("id")
+		ctx.Send(param)
 	})
 
 	app.Get("/json", func(ctx *client.Context) {
