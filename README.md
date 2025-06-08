@@ -56,7 +56,7 @@ This client provides an Express.js-like interface for building HTTP servers in G
 
 ## Documentation
 
-For detailed API documentation, visit [godoc.org/github.com/ali/go-http-client](https://godoc.org/github.com/ali/go-http-client).
+For detailed API documentation, visit [![Go Reference](https://pkg.go.dev/badge/github.com/AlshehriAli0/go-http-client.svg)](https://pkg.go.dev/github.com/AlshehriAli0/go-http-client).
 
 ### Key Components
 
