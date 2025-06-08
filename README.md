@@ -1,18 +1,44 @@
 # Go HTTP Client
 
 [![WIP](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/yourusername/go-http-client)
+[![GoDoc](https://godoc.org/github.com/ali/go-http-client?status.svg)](https://godoc.org/github.com/ali/go-http-client)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ali/go-http-client)](https://goreportcard.com/report/github.com/ali/go-http-client)
 
 A lightweight HTTP client for Go inspired by Express.js patterns. This project aims to provide a familiar development experience for Express.js developers transitioning to Go, while maintaining Go's performance characteristics.
 
 ## Installation
 
+### Using Go Modules (Recommended)
+
 ```bash
+# Initialize your module (if you haven't already)
+go mod init your-module-name
+
+# Add the dependency
 go get github.com/ali/go-http-client
 ```
 
+### Manual Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ali/go-http-client.git
+
+# Navigate to the project directory
+cd go-http-client
+
+# Install the package
+go install
+```
+
+## Requirements
+
+- Go 1.21 or higher
+- Go modules enabled
+
 ## Overview
 
-This client provides an Express.js-like interface for building HTTP servers in Go, built on top of the standard `net/http` package.
+This client provides an Express.js-like interface for building HTTP servers in Go, built on top of the standard `net/http` package. It offers a familiar routing system and middleware support while maintaining Go's performance and simplicity.
 
 ## Features
 
@@ -23,6 +49,31 @@ This client provides an Express.js-like interface for building HTTP servers in G
 - Middleware support
 - Minimal API surface
 - Standard library based
+- Comprehensive error handling
+- Cookie support
+- Header manipulation
+- Status code management
+
+## Documentation
+
+For detailed API documentation, visit [godoc.org/github.com/ali/go-http-client](https://godoc.org/github.com/ali/go-http-client).
+
+### Key Components
+
+#### App
+The main application instance that manages routes and middleware. Use `client.New()` to create a new instance.
+
+#### Context
+Provides methods for handling requests and responses, including:
+- Request body reading
+- Parameter extraction
+- Response sending
+- Header manipulation
+- Cookie handling
+- Status code management
+
+#### Middleware
+Functions that have access to the request and response objects, and the next middleware function in the application's request-response cycle.
 
 ## Examples
 
@@ -66,6 +117,17 @@ app.Get("/json", func(ctx *client.Context) {
 })
 ```
 
+### Middleware Example
+```go
+func Logger(ctx *client.Context) {
+    start := time.Now()
+    // Process request
+    fmt.Printf("Request processed in %v\n", time.Since(start))
+}
+
+app.Use(Logger)
+```
+
 ### Complete Example
 ```go
 package main
@@ -104,6 +166,10 @@ func main() {
     app.Start(3000)
 }
 ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Status
 

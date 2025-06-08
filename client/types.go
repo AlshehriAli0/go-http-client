@@ -23,7 +23,6 @@ type Context struct {
 	param      map[string]string
 	terminated bool
 }
-
 type Method string
 
 const (

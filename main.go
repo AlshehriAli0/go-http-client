@@ -2,73 +2,65 @@ package main
 
 import (
 	"fmt"
-	"go-http-client/client"
-	"net/http"
+
+	"github.com/AlshehriAli0/go-http-client/client"
 )
 
-// Test struct represents a simple data structure with Name and Job fields
-type Test struct {
-	Name string `json:"name"`
-	Job  string `json:"job"`
+// User represents a simple user data structure
+type User struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
-// Logger is a middleware that prints request method and path
+// Logger middleware prints request information
 func Logger(ctx *client.Context) {
-	// here you can check auth or log etc..
-	fmt.Println("Request:", ctx.Request.Method, ctx.Request.URL.Path)
+	fmt.Printf("New request: %s %s\n", ctx.Request.Method, ctx.Request.URL.Path)
 }
 
-// Auth is a middleware that checks authentication and redirects to /json if not authenticated
-func Auth(ctx *client.Context) {
-	// here you can check auth or log etc..
-	fmt.Println("User Not Authenticated, Redirecting")
-	ctx.Redirect("/json", http.StatusPermanentRedirect)
-}
-
-// main initializes the application and sets up example routes
 func main() {
+	// Create a new app instance
 	app := client.New()
 
-	// Register middleware
+	// Add global middleware
 	app.Use(Logger)
 
-	// Create test JSON data
-	testJson := Test{Name: "Ali", Job: "dev"}
-
-	// Example 1: URL Parameter handling
-	// Route: "/:id" - Captures any value after the root path as 'id' parameter
-	// e.g. "/123" -> Returns "123"
-	app.Get("/:id", nil, func(ctx *client.Context) {
-		param := ctx.Param("id")
-		ctx.Send(param)
+	// Example 1: Simple GET route
+	app.Get("/", nil, func(ctx *client.Context) {
+		ctx.Send("Welcome to the API!")
 	})
 
-	// Example 2: Query Parameter handling
-	// Route: "/search?s=query" - Retrieves 's' query parameter from URL
-	// e.g. "/search?s=hello" -> Returns "hello"
+	// Example 2: Route with URL parameter
+	app.Get("/users/:id", nil, func(ctx *client.Context) {
+		userID := ctx.Param("id")
+		ctx.Send(fmt.Sprintf("Fetching user with ID: %s", userID))
+	})
+
+	// Example 3: Route with query parameters
 	app.Get("/search", nil, func(ctx *client.Context) {
-		search := ctx.Query("s")
-		ctx.Send(search)
+		query := ctx.Query("q")
+		ctx.Send(fmt.Sprintf("Searching for: %s", query))
 	})
 
-	// Example 3: JSON Response
-	// Route: "/json" - Returns a JSON object
-	// Returns: {"name":"Ali","job":"dev"}
-	app.Get("/json", nil, func(ctx *client.Context) {
-		ctx.JSON(testJson)
+	// Example 4: JSON response
+	app.Get("/profile", nil, func(ctx *client.Context) {
+		user := User{
+			Name:  "John Doe",
+			Email: "john@example.com",
+		}
+		ctx.JSON(user)
 	})
 
-	// Example 4: POST request handling with authentication
-	// Route: "/post" - Accepts POST requests with body data
-	// Requires authentication via Auth middleware
-	app.Post("/post", Auth, func(ctx *client.Context) {
+	// Example 5: POST request
+	app.Post("/users", nil, func(ctx *client.Context) {
 		body, err := ctx.ReadBody()
 		if err != nil {
-			ctx.Error("Error reading body", http.StatusBadRequest)
+			ctx.Error("Failed to read request body", 400)
+			return
 		}
-		ctx.Send(body)
+		ctx.Send(fmt.Sprintf("Received data: %s", body))
 	})
 
 	// Start the server on port 3000
+	fmt.Println("Server starting on http://localhost:3000")
 	app.Start(3000)
 }
