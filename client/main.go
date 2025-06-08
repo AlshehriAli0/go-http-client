@@ -18,7 +18,27 @@ func (app *App) Get(routeName string, handler HandlerFunc) {
 	app.appendRoute(routeKey, handler)
 }
 
-// context methods
+func (app *App) Post(routeName string, handler HandlerFunc) {
+	routeKey := Route{routeName: routeName, method: Post}
+	app.appendRoute(routeKey, handler)
+}
+
+func (app *App) Update(routeName string, handler HandlerFunc) {
+	routeKey := Route{routeName: routeName, method: Update}
+	app.appendRoute(routeKey, handler)
+}
+
+func (app *App) Patch(routeName string, handler HandlerFunc) {
+	routeKey := Route{routeName: routeName, method: Patch}
+	app.appendRoute(routeKey, handler)
+}
+
+func (app *App) Delete(routeName string, handler HandlerFunc) {
+	routeKey := Route{routeName: routeName, method: Delete}
+	app.appendRoute(routeKey, handler)
+}
+
+// Handler methods
 func (ctx *Context) Send(str string) {
 	strByte := []byte(str)
 	ctx.Writer.Write(strByte)
