@@ -12,22 +12,24 @@ type Test struct {
 	Job  string `json:"job"`
 }
 
-// Middleware example
+// Logger is a middleware that prints request method and path
 func Logger(ctx *client.Context) {
 	// here you can check auth or log etc..
 	fmt.Println("Request:", ctx.Request.Method, ctx.Request.URL.Path)
-
 }
 
+// Auth is a middleware that checks authentication and redirects to /json if not authenticated
 func Auth(ctx *client.Context) {
 	// here you can check auth or log etc..
 	fmt.Println("User Not Authenticated, Redirecting")
 	ctx.Redirect("/json", http.StatusPermanentRedirect)
 }
 
+// main initializes the application and sets up example routes
 func main() {
 	app := client.New()
 
+	// Register middleware
 	app.Use(Logger)
 
 	// Create test JSON data
@@ -56,6 +58,9 @@ func main() {
 		ctx.JSON(testJson)
 	})
 
+	// Example 4: POST request handling with authentication
+	// Route: "/post" - Accepts POST requests with body data
+	// Requires authentication via Auth middleware
 	app.Post("/post", Auth, func(ctx *client.Context) {
 		body, err := ctx.ReadBody()
 		if err != nil {
@@ -66,5 +71,4 @@ func main() {
 
 	// Start the server on port 3000
 	app.Start(3000)
-
 }

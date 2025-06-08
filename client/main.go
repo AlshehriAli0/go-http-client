@@ -18,6 +18,7 @@ func New() *App {
 	}
 }
 
+// Use adds a middleware to the application's middleware chain
 func (app *App) Use(mw Middleware) {
 	app.middlewares = append(app.middlewares, mw)
 }
@@ -26,38 +27,40 @@ func (app *App) Use(mw Middleware) {
 
 // Get registers a new GET route with the given path and handler function
 func (app *App) Get(route string, mw Middleware, handler HandlerFunc) {
-	app.Handle(Get, route, mw, handler)
+	app.handle(Get, route, mw, handler)
 }
 
 // Post registers a new POST route with the given path and handler function
 func (app *App) Post(route string, mw Middleware, handler HandlerFunc) {
-	app.Handle(Post, route, mw, handler)
+	app.handle(Post, route, mw, handler)
 
 }
 
 // Update registers a new UPDATE route with the given path and handler function
 func (app *App) Update(route string, mw Middleware, handler HandlerFunc) {
-	app.Handle(Update, route, mw, handler)
+	app.handle(Update, route, mw, handler)
 }
 
 // Patch registers a new PATCH route with the given path and handler function
 func (app *App) Patch(route string, mw Middleware, handler HandlerFunc) {
-	app.Handle(Patch, route, mw, handler)
+	app.handle(Patch, route, mw, handler)
 
 }
 
 // Delete registers a new DELETE route with the given path and handler function
 func (app *App) Delete(route string, mw Middleware, handler HandlerFunc) {
-	app.Handle(Delete, route, mw, handler)
+	app.handle(Delete, route, mw, handler)
 
 }
 
 // Context methods
 
+// End marks the context as terminated, stopping further middleware execution
 func (ctx *Context) End() {
 	ctx.terminated = true
 }
 
+// ReadBody reads and returns the request body as a string
 func (ctx *Context) ReadBody() (string, error) {
 	defer ctx.Request.Body.Close()
 
@@ -69,6 +72,7 @@ func (ctx *Context) ReadBody() (string, error) {
 	return string(body), nil
 }
 
+// Redirect performs an HTTP redirect to the specified route with the given status code
 func (ctx *Context) Redirect(route string, code int) {
 	http.Redirect(ctx.Writer, ctx.Request, route, code)
 	ctx.End()
@@ -81,6 +85,7 @@ func (ctx *Context) Send(str string) {
 
 }
 
+// Error sends an HTTP error response with the given message and status code
 func (ctx *Context) Error(message string, code int) {
 	http.Error(ctx.Writer, message, code)
 }
