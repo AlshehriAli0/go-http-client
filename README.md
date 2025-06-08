@@ -4,6 +4,12 @@
 
 A lightweight HTTP client for Go inspired by Express.js patterns. This project aims to provide a familiar development experience for Express.js developers transitioning to Go, while maintaining Go's performance characteristics.
 
+## Installation
+
+```bash
+go get github.com/ali/go-http-client
+```
+
 ## Overview
 
 This client provides an Express.js-like interface for building HTTP servers in Go, built on top of the standard `net/http` package.

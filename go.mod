@@ -1,3 +1,3 @@
-module go-http-client
+module github.com/AlshehriAli0/go-http-client
 
 go 1.24.4
