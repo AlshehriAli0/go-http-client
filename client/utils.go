@@ -19,3 +19,22 @@ func generateRouteKey(route string, method Method) RouteEntry {
 	return routeKey
 
 }
+
+func (app *App) Handle(method Method, route string, mw Middleware, handler HandlerFunc) {
+	key := generateRouteKey(route, method)
+	app.appendRoute(key, wrapMiddleware(handler, mw))
+}
+
+func wrapMiddleware(handler HandlerFunc, mw Middleware) HandlerFunc {
+	if mw == nil {
+		return handler
+	}
+
+	return func(ctx *Context) {
+		mw(ctx)
+		if !ctx.terminated {
+			handler(ctx)
+		}
+	}
+
+}

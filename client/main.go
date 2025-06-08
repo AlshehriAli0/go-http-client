@@ -25,33 +25,31 @@ func (app *App) Use(mw Middleware) {
 // Routes
 
 // Get registers a new GET route with the given path and handler function
-func (app *App) Get(route string, handler HandlerFunc) {
-	key := generateRouteKey(route, Get)
-	app.appendRoute(key, handler)
+func (app *App) Get(route string, mw Middleware, handler HandlerFunc) {
+	app.Handle(Get, route, mw, handler)
 }
 
 // Post registers a new POST route with the given path and handler function
-func (app *App) Post(route string, handler HandlerFunc) {
-	key := generateRouteKey(route, Post)
-	app.appendRoute(key, handler)
+func (app *App) Post(route string, mw Middleware, handler HandlerFunc) {
+	app.Handle(Post, route, mw, handler)
+
 }
 
 // Update registers a new UPDATE route with the given path and handler function
-func (app *App) Update(route string, handler HandlerFunc) {
-	key := generateRouteKey(route, Update)
-	app.appendRoute(key, handler)
+func (app *App) Update(route string, mw Middleware, handler HandlerFunc) {
+	app.Handle(Update, route, mw, handler)
 }
 
 // Patch registers a new PATCH route with the given path and handler function
-func (app *App) Patch(route string, handler HandlerFunc) {
-	key := generateRouteKey(route, Patch)
-	app.appendRoute(key, handler)
+func (app *App) Patch(route string, mw Middleware, handler HandlerFunc) {
+	app.Handle(Patch, route, mw, handler)
+
 }
 
 // Delete registers a new DELETE route with the given path and handler function
-func (app *App) Delete(route string, handler HandlerFunc) {
-	key := generateRouteKey(route, Delete)
-	app.appendRoute(key, handler)
+func (app *App) Delete(route string, mw Middleware, handler HandlerFunc) {
+	app.Handle(Delete, route, mw, handler)
+
 }
 
 // Context methods

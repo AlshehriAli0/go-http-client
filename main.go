@@ -20,20 +20,15 @@ func Logger(ctx *client.Context) {
 }
 
 func Auth(ctx *client.Context) {
-	if ctx.Request.URL.Path == "/json" {
-		return
-	}
 	// here you can check auth or log etc..
-	fmt.Println("User Not Authenticated")
+	fmt.Println("User Not Authenticated, Redirecting")
 	ctx.Redirect("/json", http.StatusPermanentRedirect)
-
 }
 
 func main() {
 	app := client.New()
 
 	app.Use(Logger)
-	app.Use(Auth)
 
 	// Create test JSON data
 	testJson := Test{Name: "Ali", Job: "dev"}
@@ -41,7 +36,7 @@ func main() {
 	// Example 1: URL Parameter handling
 	// Route: "/:id" - Captures any value after the root path as 'id' parameter
 	// e.g. "/123" -> Returns "123"
-	app.Get("/:id", func(ctx *client.Context) {
+	app.Get("/:id", nil, func(ctx *client.Context) {
 		param := ctx.Param("id")
 		ctx.Send(param)
 	})
@@ -49,7 +44,7 @@ func main() {
 	// Example 2: Query Parameter handling
 	// Route: "/search?s=query" - Retrieves 's' query parameter from URL
 	// e.g. "/search?s=hello" -> Returns "hello"
-	app.Get("/search", func(ctx *client.Context) {
+	app.Get("/search", nil, func(ctx *client.Context) {
 		search := ctx.Query("s")
 		ctx.Send(search)
 	})
@@ -57,11 +52,11 @@ func main() {
 	// Example 3: JSON Response
 	// Route: "/json" - Returns a JSON object
 	// Returns: {"name":"Ali","job":"dev"}
-	app.Get("/json", func(ctx *client.Context) {
+	app.Get("/json", nil, func(ctx *client.Context) {
 		ctx.JSON(testJson)
 	})
 
-	app.Post("/post", func(ctx *client.Context) {
+	app.Post("/post", Auth, func(ctx *client.Context) {
 		body, err := ctx.ReadBody()
 		if err != nil {
 			ctx.Error("Error reading body", http.StatusBadRequest)
