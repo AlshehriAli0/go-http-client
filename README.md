@@ -1,8 +1,8 @@
 # Go HTTP Client
 
 [![WIP](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/yourusername/go-http-client)
-[![GoDoc](https://godoc.org/github.com/alshehriali0/go-http-client?status.svg)](https://godoc.org/github.com/alshehriali0/go-http-client)
-[![Go Report Card](https://goreportcard.com/badge/github.com/alshehriali0/go-http-client)](https://goreportcard.com/report/github.com/alshehriali0/go-http-client)
+[![GoDoc](https://godoc.org/github.com/AlshehriAli0/go-http-client?status.svg)](https://godoc.org/github.com/AlshehriAli0/go-http-client)
+[![Go Report Card](https://goreportcard.com/badge/github.com/AlshehriAli0/go-http-client)](https://goreportcard.com/report/github.com/AlshehriAli0/go-http-client)
 
 A lightweight HTTP client for Go inspired by Express.js patterns. This project aims to provide a familiar development experience for Express.js developers transitioning to Go, while maintaining Go's performance characteristics.
 
@@ -15,14 +15,14 @@ A lightweight HTTP client for Go inspired by Express.js patterns. This project a
 go mod init your-module-name
 
 # Add the dependency
-go get github.com/alshehriali0/go-http-client
+go get github.com/AlshehriAli0/go-http-client
 ```
 
 ### Manual Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/alshehriali0/go-http-client.git
+git clone https://github.com/AlshehriAli0/go-http-client.git
 
 # Navigate to the project directory
 cd go-http-client
