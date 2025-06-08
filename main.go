@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"go-http-client/client"
+	"net/http"
 )
 
 // Test struct represents a simple data structure with Name and Job fields
@@ -10,8 +12,28 @@ type Test struct {
 	Job  string `json:"job"`
 }
 
+// Middleware example
+func Logger(ctx *client.Context) {
+	// here you can check auth or log etc..
+	fmt.Println("Request:", ctx.Request.Method, ctx.Request.URL.Path)
+
+}
+
+func Auth(ctx *client.Context) {
+	if ctx.Request.URL.Path == "/json" {
+		return
+	}
+	// here you can check auth or log etc..
+	fmt.Println("User Not Authenticated")
+	ctx.Redirect("/json", http.StatusPermanentRedirect)
+
+}
+
 func main() {
 	app := client.New()
+
+	app.Use(Logger)
+	app.Use(Auth)
 
 	// Create test JSON data
 	testJson := Test{Name: "Ali", Job: "dev"}
@@ -37,6 +59,14 @@ func main() {
 	// Returns: {"name":"Ali","job":"dev"}
 	app.Get("/json", func(ctx *client.Context) {
 		ctx.JSON(testJson)
+	})
+
+	app.Post("/post", func(ctx *client.Context) {
+		body, err := ctx.ReadBody()
+		if err != nil {
+			ctx.Error("Error reading body", http.StatusBadRequest)
+		}
+		ctx.Send(body)
 	})
 
 	// Start the server on port 3000

@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"path"
@@ -15,6 +16,10 @@ func New() *App {
 	return &App{
 		routes: make(map[RouteEntry]HandlerFunc),
 	}
+}
+
+func (app *App) Use(mw Middleware) {
+	app.middlewares = append(app.middlewares, mw)
 }
 
 // Routes
@@ -51,11 +56,35 @@ func (app *App) Delete(route string, handler HandlerFunc) {
 
 // Context methods
 
+func (ctx *Context) End() {
+	ctx.terminated = true
+}
+
+func (ctx *Context) ReadBody() (string, error) {
+	defer ctx.Request.Body.Close()
+
+	body, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+func (ctx *Context) Redirect(route string, code int) {
+	http.Redirect(ctx.Writer, ctx.Request, route, code)
+	ctx.End()
+}
+
 // Send writes a string response to the client
 func (ctx *Context) Send(str string) {
 	strByte := []byte(str)
 	ctx.Writer.Write(strByte)
 
+}
+
+func (ctx *Context) Error(message string, code int) {
+	http.Error(ctx.Writer, message, code)
 }
 
 // Param retrieves the value of a URL parameter by its key
@@ -77,7 +106,7 @@ func (ctx *Context) JSON(jsonData interface{}) {
 	parsedJson, err := json.Marshal(jsonData)
 
 	if err != nil {
-		http.Error(ctx.Writer, "Not a valid JSON", http.StatusInternalServerError)
+		ctx.Error("Not a valid JSON", http.StatusInternalServerError)
 		return
 	}
 
@@ -102,6 +131,7 @@ func (app *App) Start(port int) {
 		handler := routes[routeKey]
 
 		http.HandleFunc(routeKey.routeName, func(w http.ResponseWriter, r *http.Request) {
+
 			param := make(map[string]string)
 
 			// Check if route has params
@@ -115,6 +145,15 @@ func (app *App) Start(port int) {
 				Writer:  w,
 				Request: r,
 				param:   param,
+			}
+
+			for _, mw := range app.middlewares {
+				mw(ctx)
+				// stop the chaining
+				if ctx.terminated {
+					return
+				}
+
 			}
 
 			handler(ctx)
