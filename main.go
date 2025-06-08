@@ -1,16 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"go-http-client/client"
-	"net/http"
 )
+
+type Test struct {
+	Name string `json:"name"`
+	Job  string `json:"job"`
+}
 
 func main() {
 	app := client.New()
 
-	app.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello")
+	testJson := Test{Name: "Ali", Job: "dev"}
+
+	app.Get("/", func(ctx *client.Context) {
+		ctx.Send("Nice")
+	})
+
+	app.Get("/json", func(ctx *client.Context) {
+		ctx.JSON(testJson)
 	})
 
 	app.Start()

@@ -9,7 +9,7 @@ const (
 	Get    Method = "get"
 	Patch  Method = "patch"
 	Update Method = "update"
-	delete Method = "delete"
+	Delete Method = "delete"
 )
 
 type Route struct {
@@ -18,5 +18,12 @@ type Route struct {
 }
 
 type App struct {
-	routes map[Route]http.HandlerFunc
+	routes map[Route]HandlerFunc
+}
+
+type HandlerFunc func(*Context)
+
+type Context struct {
+	Writer  http.ResponseWriter
+	Request *http.Request
 }

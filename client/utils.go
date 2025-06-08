@@ -1,7 +1,5 @@
 package client
 
-import "net/http"
-
-func (app *App) appendRoute(routeKey Route, handler http.HandlerFunc) {
+func (app *App) appendRoute(routeKey Route, handler HandlerFunc) {
 	app.routes[routeKey] = handler
 }
