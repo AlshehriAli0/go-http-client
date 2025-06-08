@@ -79,7 +79,7 @@ Functions that have access to the request and response objects, and the next mid
 
 ### Basic Route
 ```go
-app.Get("/", func(ctx *client.Context) {
+app.Get("/", nil, func(ctx *client.Context) {
     ctx.Send("Hello World")
 })
 ```
@@ -88,7 +88,7 @@ app.Get("/", func(ctx *client.Context) {
 ```go
 // Route: "/:id" - Captures any value after the root path as 'id' parameter
 // e.g. "/123" -> Returns "123"
-app.Get("/:id", func(ctx *client.Context) {
+app.Get("/:id", nil, func(ctx *client.Context) {
     param := ctx.Param("id")
     ctx.Send(param)
 })
@@ -98,7 +98,7 @@ app.Get("/:id", func(ctx *client.Context) {
 ```go
 // Route: "/search?s=query" - Retrieves 's' query parameter from URL
 // e.g. "/search?s=hello" -> Returns "hello"
-app.Get("/search", func(ctx *client.Context) {
+app.Get("/search", nil, func(ctx *client.Context) {
     search := ctx.Query("s")
     ctx.Send(search)
 })
@@ -111,7 +111,7 @@ type Test struct {
     Job  string `json:"job"`
 }
 
-app.Get("/json", func(ctx *client.Context) {
+app.Get("/json", nil, func(ctx *client.Context) {
     data := Test{Name: "Ali", Job: "dev"}
     ctx.JSON(data)
 })
@@ -119,13 +119,34 @@ app.Get("/json", func(ctx *client.Context) {
 
 ### Middleware Example
 ```go
+// Logger middleware prints request information
 func Logger(ctx *client.Context) {
     start := time.Now()
     // Process request
     fmt.Printf("Request processed in %v\n", time.Since(start))
 }
 
-app.Use(Logger)
+// Auth middleware example
+func AuthMiddleware(ctx *client.Context) {
+    token := ctx.GetHeader("Authorization")
+    if token == "" {
+        ctx.Status(401)
+        ctx.JSON(map[string]string{"error": "Unauthorized"})
+        ctx.End()
+        return
+    }
+    // Continue to next middleware/handler if authorized
+}
+
+// Route with middleware
+app.Get("/protected", AuthMiddleware, func(ctx *client.Context) {
+    ctx.Send("Protected route - You are authorized!")
+})
+
+// Route without middleware (using nil)
+app.Get("/public", nil, func(ctx *client.Context) {
+    ctx.Send("Public route")
+})
 ```
 
 ### Complete Example
@@ -133,7 +154,7 @@ app.Use(Logger)
 package main
 
 import (
-    "go-http-client/client"
+    "github.com/AlshehriAli0/go-http-client/client"
 )
 
 type Test struct {
@@ -145,19 +166,19 @@ func main() {
     app := client.New()
     
     // URL parameter example
-    app.Get("/:id", func(ctx *client.Context) {
+    app.Get("/:id", nil, func(ctx *client.Context) {
         param := ctx.Param("id")
         ctx.Send(param)
     })
 
     // Query parameter example
-    app.Get("/search", func(ctx *client.Context) {
+    app.Get("/search", nil, func(ctx *client.Context) {
         search := ctx.Query("s")
         ctx.Send(search)
     })
 
     // JSON response example
-    app.Get("/json", func(ctx *client.Context) {
+    app.Get("/json", nil, func(ctx *client.Context) {
         data := Test{Name: "Ali", Job: "dev"}
         ctx.JSON(data)
     })
