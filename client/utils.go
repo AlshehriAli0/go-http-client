@@ -13,6 +13,16 @@ func (app *App) appendRoute(routeKey RouteEntry, handler HandlerFunc) {
 	app.routes[routeKey] = handler
 }
 
+// Path returns the request path.
+func (ctx *Context) Path() string {
+	return ctx.Request.URL.Path
+}
+
+// Method returns the HTTP request method (e.g. GET, POST).
+func (ctx *Context) Method() string {
+	return ctx.Request.Method
+}
+
 // generateRouteKey creates a new RouteEntry from a route string and HTTP method
 func generateRouteKey(route string, method Method) RouteEntry {
 	parsedRouteName := strings.Split(route, ":")[0]
