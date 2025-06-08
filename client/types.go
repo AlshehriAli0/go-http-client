@@ -27,5 +27,5 @@ type HandlerFunc func(*Context)
 type Context struct {
 	Writer  http.ResponseWriter
 	Request *http.Request
-	Params  map[string]string
+	param   map[string]string
 }
