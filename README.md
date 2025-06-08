@@ -11,29 +11,91 @@ This client provides an Express.js-like interface for building HTTP servers in G
 ## Features
 
 - Express.js style routing
+- URL parameter handling (`/:param`)
+- Query parameter support
+- JSON response handling
 - Middleware support
 - Minimal API surface
 - Standard library based
 
-## Example
+## Examples
 
+### Basic Route
+```go
+app.Get("/", func(ctx *client.Context) {
+    ctx.Send("Hello World")
+})
+```
+
+### URL Parameters
+```go
+// Route: "/:id" - Captures any value after the root path as 'id' parameter
+// e.g. "/123" -> Returns "123"
+app.Get("/:id", func(ctx *client.Context) {
+    param := ctx.Param("id")
+    ctx.Send(param)
+})
+```
+
+### Query Parameters
+```go
+// Route: "/search?s=query" - Retrieves 's' query parameter from URL
+// e.g. "/search?s=hello" -> Returns "hello"
+app.Get("/search", func(ctx *client.Context) {
+    search := ctx.Query("s")
+    ctx.Send(search)
+})
+```
+
+### JSON Response
+```go
+type Test struct {
+    Name string `json:"name"`
+    Job  string `json:"job"`
+}
+
+app.Get("/json", func(ctx *client.Context) {
+    data := Test{Name: "Ali", Job: "dev"}
+    ctx.JSON(data)
+})
+```
+
+### Complete Example
 ```go
 package main
 
 import (
-    "fmt"
     "go-http-client/client"
-    "net/http"
 )
+
+type Test struct {
+    Name string `json:"name"`
+    Job  string `json:"job"`
+}
 
 func main() {
     app := client.New()
-
-    app.Get("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintln(w, "Hello")
+    
+    // URL parameter example
+    app.Get("/:id", func(ctx *client.Context) {
+        param := ctx.Param("id")
+        ctx.Send(param)
     })
 
-    app.Start()
+    // Query parameter example
+    app.Get("/search", func(ctx *client.Context) {
+        search := ctx.Query("s")
+        ctx.Send(search)
+    })
+
+    // JSON response example
+    app.Get("/json", func(ctx *client.Context) {
+        data := Test{Name: "Ali", Job: "dev"}
+        ctx.JSON(data)
+    })
+
+    // Start the server on port 3000
+    app.Start(3000)
 }
 ```
 
