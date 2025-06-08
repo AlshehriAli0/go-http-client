@@ -9,50 +9,47 @@ import (
 	"strings"
 )
 
-// New creates and returns a new App instance with initialized routes
+// New creates and returns a new App instance with initialized routes.
 func New() *App {
 	return &App{
 		routes: make(map[RouteEntry]HandlerFunc),
 	}
 }
 
-// Use adds a middleware to the application's middleware chain
+// Use adds a middleware to the application's middleware chain.
 func (app *App) Use(mw Middleware) {
 	app.middlewares = append(app.middlewares, mw)
 }
 
 // Routes
 
-// Get registers a new GET route with the given path and handler function
+// Get registers a new GET route with the given path and handler function.
 func (app *App) Get(route string, mw Middleware, handler HandlerFunc) {
 	app.handle(Get, route, mw, handler)
 }
 
-// Post registers a new POST route with the given path and handler function
+// Post registers a new POST route with the given path and handler function.
 func (app *App) Post(route string, mw Middleware, handler HandlerFunc) {
 	app.handle(Post, route, mw, handler)
-
 }
 
-// Update registers a new UPDATE route with the given path and handler function
+// Update registers a new UPDATE route with the given path and handler function.
 func (app *App) Update(route string, mw Middleware, handler HandlerFunc) {
 	app.handle(Update, route, mw, handler)
 }
 
-// Patch registers a new PATCH route with the given path and handler function
+// Patch registers a new PATCH route with the given path and handler function.
 func (app *App) Patch(route string, mw Middleware, handler HandlerFunc) {
 	app.handle(Patch, route, mw, handler)
-
 }
 
-// Delete registers a new DELETE route with the given path and handler function
+// Delete registers a new DELETE route with the given path and handler function.
 func (app *App) Delete(route string, mw Middleware, handler HandlerFunc) {
 	app.handle(Delete, route, mw, handler)
-
 }
 
-// Start begins the HTTP server on port 3000 and sets up all registered routes
-// Prints all registered routes to console for debugging purposes
+// Start begins the HTTP server on the specified port and sets up all registered routes.
+// It prints all registered routes to the console for debugging purposes.
 func (app *App) Start(port int) {
 	routes := app.routes
 	if port == 0 {
@@ -90,7 +87,6 @@ func (app *App) Start(port int) {
 				if ctx.terminated {
 					return
 				}
-
 			}
 
 			handler(ctx)
