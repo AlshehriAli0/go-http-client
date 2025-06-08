@@ -132,7 +132,7 @@ func AuthMiddleware(ctx *client.Context) {
     if token == "" {
         ctx.Status(401)
         ctx.JSON(map[string]string{"error": "Unauthorized"})
-        ctx.End()
+        ctx.End() // using end will cancel middleware chaining so maybe redirect if this isnt intended
         return
     }
     // Continue to next middleware/handler if authorized
