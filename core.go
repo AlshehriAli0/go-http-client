@@ -19,31 +19,9 @@ func (app *App) Use(mw Middleware) {
 	app.middlewares = append(app.middlewares, mw)
 }
 
-// Routes
-
-// Get registers a new GET route with the given path and handler function.
-func (app *App) Get(route string, mw Middleware, handler HandlerFunc) {
-	app.handle(Get, route, mw, handler)
-}
-
-// Post registers a new POST route with the given path and handler function.
-func (app *App) Post(route string, mw Middleware, handler HandlerFunc) {
-	app.handle(Post, route, mw, handler)
-}
-
-// Update registers a new UPDATE route with the given path and handler function.
-func (app *App) Update(route string, mw Middleware, handler HandlerFunc) {
-	app.handle(Update, route, mw, handler)
-}
-
-// Patch registers a new PATCH route with the given path and handler function.
-func (app *App) Patch(route string, mw Middleware, handler HandlerFunc) {
-	app.handle(Patch, route, mw, handler)
-}
-
-// Delete registers a new DELETE route with the given path and handler function.
-func (app *App) Delete(route string, mw Middleware, handler HandlerFunc) {
-	app.handle(Delete, route, mw, handler)
+// Group creates a new route group with the specified prefix. Useful for modular route organization.
+func (app *App) Group(prefix string) *Group {
+	return &Group{prefix: normalizePath(prefix), app: app}
 }
 
 // Start begins the HTTP server on the specified port and sets up all registered routes.

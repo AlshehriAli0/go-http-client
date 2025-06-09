@@ -388,7 +388,42 @@ func main() {
 }
 ```
 
+### Route Grouping for Modular Systems
 
+Route grouping allows you to organize related routes under a common prefix, making your codebase more modular and maintainable. Each group can have its own middleware and handlers, and is ideal for separating concerns (e.g., user routes, admin routes).
+
+```go
+app := client.New()
+
+// Global middleware
+app.Use(func(ctx *client.Context) {
+    fmt.Printf("[LOG] %s %s\n", ctx.Method(), ctx.Path())
+})
+
+// Group for user-related routes
+userGroup := app.Group("/users")
+
+// Now all routes will start with /users
+userGroup.Get("/", nil, func(ctx *client.Context) {
+    ctx.Send("List all users")
+})
+userGroup.Get("/:id", nil, func(ctx *client.Context) {
+    ctx.Send("Get user with ID: " + ctx.Param("id"))
+})
+userGroup.Post("/", AuthMiddleware, func(ctx *client.Context) {
+    ctx.Send("Create user (auth required)")
+})
+
+// Group for admin-related routes
+adminGroup := app.Group("/admin")
+adminGroup.Get("/dashboard", AuthMiddleware, func(ctx *client.Context) {
+    ctx.Send("Welcome to the admin dashboard!")
+})
+
+app.Start(3000)
+```
+
+This makes it easy to keep your route logic modular and organized, especially for larger applications.
 
 ## Status
 

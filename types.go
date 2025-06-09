@@ -2,7 +2,7 @@ package client
 
 import "net/http"
 
-// RouteEntry represents a route's pattern, name, and HTTP method.
+// Route represents a route's pattern, name, and HTTP method.
 type Route struct {
 	pattern string
 	handler HandlerFunc
@@ -10,6 +10,12 @@ type Route struct {
 
 // Middleware defines a function to process middleware logic for a request.
 type Middleware func(*Context)
+
+// Group represents a group of routes with a common prefix, useful for modular route organization.
+type Group struct {
+	prefix string
+	app    *App
+}
 
 // App is the main application struct for the HTTP client framework.
 type App struct {

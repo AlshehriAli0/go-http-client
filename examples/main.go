@@ -31,9 +31,10 @@ func main() {
 	})
 
 	// Example 2: Route with URL parameter
-	app.Get("/users/:id", nil, func(ctx *client.Context) {
+	app.Get("/users/:id/post/:post", nil, func(ctx *client.Context) {
 		userID := ctx.Param("id")
-		ctx.Send(fmt.Sprintf("Fetching user with ID: %s", userID))
+		post := ctx.Param("post")
+		ctx.Send(fmt.Sprintf("Fetching user with ID: %s, with post %s", userID, post))
 	})
 
 	// Example 3: Search query params with JSON response
