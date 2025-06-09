@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/AlshehriAli0/go-http-client/client"
+	client "github.com/AlshehriAli0/go-http-client"
 )
 
 // User represents a simple user data structure
