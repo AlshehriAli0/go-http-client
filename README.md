@@ -38,7 +38,9 @@ go install
 
 ## Overview
 
-This client provides an Express.js-like interface for building HTTP servers in Go, built on top of the standard `net/http` package. It offers a familiar routing system and middleware support while maintaining Go's performance and simplicity.
+This client provides an Express.js like interface for building HTTP servers in Go, built on top of the standard `net/http` package. It offers a familiar routing system and middleware support while maintaining Go's performance and simplicity.
+
+**It is extremely easy to use and lightweight, specifically designed to help Express.js (Node.js) developers transition to Go with minimal friction.**
 
 ## Features
 
@@ -53,6 +55,204 @@ This client provides an Express.js-like interface for building HTTP servers in G
 - Cookie support
 - Header manipulation
 - Status code management
+- Supports multiple routes with the same name but different HTTP methods (e.g., both `GET /user` and `POST /user`) unlike http/net package
+
+## Comparison: Our API vs. Writing Go HTTP Servers from Scratch
+
+When building HTTP servers in Go using only the standard library, you typically need to:
+- Manually set up route matching and parsing
+- Write boilerplate for extracting URL/query parameters
+- Chain middleware logic by hand
+- Manage context, headers, cookies, and status codes explicitly
+- Handle JSON serialization and error responses yourself
+
+With **go-http-client**, you get:
+- Express.js style route registration with method based handlers (e.g., `app.Get`, `app.Post`)
+- Built in support for multiple routes with the same name but different HTTP methods
+- Automatic parameter and query extraction via `ctx.Param` and `ctx.Query`
+- Simple middleware chaining with `app.Use` and per route middleware
+- Unified `Context` object for request/response handling
+- Built in helpers for JSON, status codes, headers, and cookies
+- Less boilerplate and more readable, maintainable code
+
+**Example: Registering multiple methods for the same route**
+
+```go
+app.Get("/user", nil, func(ctx *client.Context) {
+    ctx.Send("GET user")
+})
+app.Post("/user", nil, func(ctx *client.Context) {
+    ctx.Send("POST user")
+})
+```
+
+**Standard library equivalent:**
+
+```go
+http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+    switch r.Method {
+    case "GET":
+        w.Write([]byte("GET user"))
+    case "POST":
+        w.Write([]byte("POST user"))
+    default:
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
+})
+```
+
+**Example: Dynamic Routing with Params and Middleware**
+
+**With go-http-client:**
+
+```go
+// Logger middleware
+func Logger(ctx *client.Context) {
+    fmt.Printf("%s %s\n", ctx.Method(), ctx.Path())
+}
+
+app := client.New()
+app.Use(Logger)
+
+// Dynamic route with param and per-route middleware
+auth := func(ctx *client.Context) {
+    if ctx.GetHeader("Authorization") == "" {
+        ctx.Status(401)
+        ctx.Send("Unauthorized")
+        ctx.End()
+    }
+}
+
+app.Get("/user/:id", auth, func(ctx *client.Context) {
+    ctx.Send("GET user " + ctx.Param("id"))
+})
+app.Post("/user/:id", auth, func(ctx *client.Context) {
+    ctx.Send("POST user " + ctx.Param("id"))
+})
+
+app.Start(3000)
+```
+
+**Standard library equivalent:**
+
+```go
+http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
+    // Logger
+    fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+
+    // Basic param extraction
+    parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+    if len(parts) < 2 || parts[0] != "user" {
+        http.NotFound(w, r)
+        return
+    }
+    id := parts[1]
+
+    // Auth middleware
+    if r.Header.Get("Authorization") == "" {
+        w.WriteHeader(401)
+        w.Write([]byte("Unauthorized"))
+        return
+    }
+
+    switch r.Method {
+    case "GET":
+        w.Write([]byte("GET user " + id))
+    case "POST":
+        w.Write([]byte("POST user " + id))
+    default:
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
+})
+
+http.ListenAndServe(":3000", nil)
+```
+
+With **go-http-client**, you get expressive, readable, and maintainable code for dynamic routes, params, and middleware—without boilerplate or manual parsing.
+
+**Another Example: Same Power, Half the Code**
+
+**With go-http-client:**
+
+```go
+// Logger middleware
+func Logger(ctx *client.Context) {
+    fmt.Printf("%s %s\n", ctx.Method(), ctx.Path())
+}
+
+// Auth middleware
+func Auth(ctx *client.Context) {
+    if ctx.GetHeader("X-Token") != "secret" {
+        ctx.Status(401)
+        ctx.JSON(map[string]string{"error": "unauthorized"})
+        ctx.End()
+    }
+}
+
+app := client.New()
+app.Use(Logger)
+
+app.Get("/greet/:name", Auth, func(ctx *client.Context) {
+    lang := ctx.Query("lang")
+    name := ctx.Param("name")
+    msg := "Hello, " + name
+    if lang == "es" {
+        msg = "Hola, " + name
+    }
+    ctx.JSON(map[string]string{"message": msg})
+})
+
+app.Post("/greet/:name", Auth, func(ctx *client.Context) {
+    ctx.JSON(map[string]string{"message": "Posted to " + ctx.Param("name")})
+})
+
+app.Start(3000)
+```
+
+**Standard library equivalent:**
+
+```go
+http.HandleFunc("/greet/", func(w http.ResponseWriter, r *http.Request) {
+    // Logger
+    fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+
+    // Auth
+    if r.Header.Get("X-Token") != "secret" {
+        w.WriteHeader(401)
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(`{"error":"unauthorized"}`))
+        return
+    }
+
+    // Param extraction
+    parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+    if len(parts) < 2 || parts[0] != "greet" {
+        http.NotFound(w, r)
+        return
+    }
+    name := parts[1]
+
+    switch r.Method {
+    case "GET":
+        lang := r.URL.Query().Get("lang")
+        msg := "Hello, " + name
+        if lang == "es" {
+            msg = "Hola, " + name
+        }
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(fmt.Sprintf(`{"message":"%s"}`, msg)))
+    case "POST":
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(fmt.Sprintf(`{"message":"Posted to %s"}", name)))
+    default:
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
+})
+
+http.ListenAndServe(":3000", nil)
+```
+
+With **go-http-client**, you achieve the same result with about half the code, no manual parsing, and much greater clarity.
 
 ## Documentation
 
@@ -73,7 +273,7 @@ Provides methods for handling requests and responses, including:
 - Status code management
 
 #### Middleware
-Functions that have access to the request and response objects, and the next middleware function in the application's request-response cycle.
+Functions that have access to the request and response objects, and the next middleware function in the application's request response cycle.
 
 ## Examples
 
@@ -132,7 +332,7 @@ func AuthMiddleware(ctx *client.Context) {
     if token == "" {
         ctx.Status(401)
         ctx.JSON(map[string]string{"error": "Unauthorized"})
-        ctx.End() // using end will cancel middleware chaining so maybe redirect if this isnt intended
+        ctx.End() // using end will cancel middleware chaining so maybe redirect if this isn't intended
         return
     }
     // Continue to next middleware/handler if authorized
@@ -188,13 +388,11 @@ func main() {
 }
 ```
 
-## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Status
 
-This project is currently a work in progress and is not recommended for production use.
+This project is currently a work in progress and is not recommended for production use yet.
 
 ## License
 
