@@ -136,10 +136,27 @@ app.Start(3000)
 **Standard library equivalent:**
 
 ```go
-http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
-    // Logger
-    fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+// Logger middleware for all requests
+func logger(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+        next(w, r)
+    }
+}
 
+// Auth middleware for protected routes
+func auth(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.Header.Get("Authorization") == "" {
+            w.WriteHeader(401)
+            w.Write([]byte("Unauthorized"))
+            return
+        }
+        next(w, r)
+    }
+}
+
+http.HandleFunc("/user/", logger(func(w http.ResponseWriter, r *http.Request) {
     // Basic param extraction
     parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
     if len(parts) < 2 || parts[0] != "user" {
@@ -148,22 +165,18 @@ http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
     }
     id := parts[1]
 
-    // Auth middleware
-    if r.Header.Get("Authorization") == "" {
-        w.WriteHeader(401)
-        w.Write([]byte("Unauthorized"))
-        return
-    }
-
-    switch r.Method {
-    case "GET":
-        w.Write([]byte("GET user " + id))
-    case "POST":
-        w.Write([]byte("POST user " + id))
-    default:
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-    }
-})
+    // Auth middleware for both GET and POST
+    auth(func(w http.ResponseWriter, r *http.Request) {
+        switch r.Method {
+        case "GET":
+            w.Write([]byte("GET user " + id))
+        case "POST":
+            w.Write([]byte("POST user " + id))
+        default:
+            http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+        }
+    })(w, r)
+}))
 
 http.ListenAndServe(":3000", nil)
 ```
@@ -212,18 +225,28 @@ app.Start(3000)
 **Standard library equivalent:**
 
 ```go
-http.HandleFunc("/greet/", func(w http.ResponseWriter, r *http.Request) {
-    // Logger
-    fmt.Printf("%s %s\n", r.Method, r.URL.Path)
-
-    // Auth
-    if r.Header.Get("X-Token") != "secret" {
-        w.WriteHeader(401)
-        w.Header().Set("Content-Type", "application/json")
-        w.Write([]byte(`{"error":"unauthorized"}`))
-        return
+// Logger middleware for all requests
+func logger(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+        next(w, r)
     }
+}
 
+// Auth middleware for protected routes
+func auth(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.Header.Get("X-Token") != "secret" {
+            w.WriteHeader(401)
+            w.Header().Set("Content-Type", "application/json")
+            w.Write([]byte(`{"error":"unauthorized"}`))
+            return
+        }
+        next(w, r)
+    }
+}
+
+http.HandleFunc("/greet/", logger(func(w http.ResponseWriter, r *http.Request) {
     // Param extraction
     parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
     if len(parts) < 2 || parts[0] != "greet" {
@@ -232,22 +255,24 @@ http.HandleFunc("/greet/", func(w http.ResponseWriter, r *http.Request) {
     }
     name := parts[1]
 
-    switch r.Method {
-    case "GET":
-        lang := r.URL.Query().Get("lang")
-        msg := "Hello, " + name
-        if lang == "es" {
-            msg = "Hola, " + name
+    auth(func(w http.ResponseWriter, r *http.Request) {
+        switch r.Method {
+        case "GET":
+            lang := r.URL.Query().Get("lang")
+            msg := "Hello, " + name
+            if lang == "es" {
+                msg = "Hola, " + name
+            }
+            w.Header().Set("Content-Type", "application/json")
+            w.Write([]byte(fmt.Sprintf(`{"message":"%s"}`, msg)))
+        case "POST":
+            w.Header().Set("Content-Type", "application/json")
+            w.Write([]byte(fmt.Sprintf(`{"message":"Posted to %s"}", name)))
+        default:
+            http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
         }
-        w.Header().Set("Content-Type", "application/json")
-        w.Write([]byte(fmt.Sprintf(`{"message":"%s"}`, msg)))
-    case "POST":
-        w.Header().Set("Content-Type", "application/json")
-        w.Write([]byte(fmt.Sprintf(`{"message":"Posted to %s"}", name)))
-    default:
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-    }
-})
+    })(w, r)
+}))
 
 http.ListenAndServe(":3000", nil)
 ```
@@ -318,6 +343,9 @@ app.Get("/json", nil, func(ctx *client.Context) {
 ```
 
 ### Middleware Example
+
+You can use general middleware with `app.Use`. General middleware will always run before any route handler and before any route-specific middleware.
+
 ```go
 // Logger middleware prints request information
 func Logger(ctx *client.Context) {
@@ -337,6 +365,9 @@ func AuthMiddleware(ctx *client.Context) {
     }
     // Continue to next middleware/handler if authorized
 }
+
+app := client.New()
+app.Use(Logger) // General middleware: always runs before any handler and before any route-specific middleware
 
 // Route with middleware
 app.Get("/protected", AuthMiddleware, func(ctx *client.Context) {
