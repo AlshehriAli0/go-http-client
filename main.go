@@ -35,22 +35,18 @@ func main() {
 		ctx.Send(fmt.Sprintf("Fetching user with ID: %s", userID))
 	})
 
-	// Example 3: Route with query parameters
-	app.Get("/search", nil, func(ctx *client.Context) {
-		query := ctx.Query("q")
-		ctx.Send(fmt.Sprintf("Searching for: %s", query))
-	})
-
-	// Example 4: JSON response
+	// Example 3: Search query params with JSON response
 	app.Get("/profile", nil, func(ctx *client.Context) {
+		query := ctx.Query("name")
+
 		user := User{
-			Name:  "John Doe",
-			Email: "john@example.com",
+			Name:  query,
+			Email: fmt.Sprintf("%s@example.com", query),
 		}
 		ctx.JSON(user)
 	})
 
-	// Example 5: POST request
+	// Example 4: POST request
 	app.Post("/users", nil, func(ctx *client.Context) {
 		body, err := ctx.ReadBody()
 		if err != nil {
@@ -61,6 +57,5 @@ func main() {
 	})
 
 	// Start the server on port 3000
-	fmt.Println("Server starting on http://localhost:3000")
 	app.Start(3000)
 }

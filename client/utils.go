@@ -1,16 +1,25 @@
 package client
 
-import "strings"
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
 
 // appendRoute adds a new route to the application's route map, checking for duplicates
-func (app *App) appendRoute(routeKey RouteEntry, handler HandlerFunc) {
-	// Check route duplication
-	for existingRoute := range app.routes {
-		if existingRoute.routeName == routeKey.routeName {
-			panic("There are two routes with the same signature")
-		}
+func (app *App) appendRoute(method Method, routeName, pattern string, handler HandlerFunc) {
+	if app.routes[routeName] == nil {
+		app.routes[routeName] = make(map[Method]Route)
 	}
-	app.routes[routeKey] = handler
+
+	if _, exists := app.routes[routeName][method]; exists {
+		panic(fmt.Sprintf("Duplicate route: %s [%s]", pattern, method))
+	}
+
+	app.routes[routeName][method] = Route{
+		pattern: pattern,
+		handler: handler,
+	}
 }
 
 // Path returns the request path.
@@ -18,24 +27,70 @@ func (ctx *Context) Path() string {
 	return ctx.Request.URL.Path
 }
 
+func (app *App) routeHandler(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	method := Method(r.Method)
+
+	for _, methodMap := range app.routes {
+		for m, route := range methodMap {
+			if m != method {
+				continue
+			}
+
+			requestSegments := strings.Split(strings.Trim(path, "/"), "/")
+			patternSegments := strings.Split(strings.Trim(route.pattern, "/"), "/")
+
+			if len(requestSegments) != len(patternSegments) {
+				continue
+			}
+
+			params := make(map[string]string)
+			matched := true
+
+			for i := range patternSegments {
+				if strings.HasPrefix(patternSegments[i], ":") {
+					paramName := strings.TrimPrefix(patternSegments[i], ":")
+					params[paramName] = requestSegments[i]
+				} else if patternSegments[i] != requestSegments[i] {
+					matched = false
+					break
+				}
+			}
+
+			if matched {
+				ctx := &Context{
+					Writer:  w,
+					Request: r,
+					param:   params,
+				}
+
+				for _, mw := range app.middlewares {
+					mw(ctx)
+					if ctx.terminated {
+						return
+					}
+				}
+
+				route.handler(ctx)
+				return
+			}
+		}
+	}
+
+	// If no match was found
+	http.NotFound(w, r)
+}
+
 // Method returns the HTTP request method (e.g. GET, POST).
 func (ctx *Context) Method() string {
 	return ctx.Request.Method
 }
 
-// generateRouteKey creates a new RouteEntry from a route string and HTTP method
-func generateRouteKey(route string, method Method) RouteEntry {
-	parsedRouteName := strings.Split(route, ":")[0]
-	routeKey := RouteEntry{routeName: parsedRouteName, method: method, pattern: route}
-
-	return routeKey
-
-}
-
 // Handle registers a new route with the given method, path, middleware and handler function
-func (app *App) handle(method Method, route string, mw Middleware, handler HandlerFunc) {
-	key := generateRouteKey(route, method)
-	app.appendRoute(key, wrapMiddleware(handler, mw))
+func (app *App) handle(method Method, pattern string, mw Middleware, handler HandlerFunc) {
+	route := strings.Split(pattern, ":")[0]
+
+	app.appendRoute(method, route, pattern, wrapMiddleware(handler, mw))
 }
 
 func wrapMiddleware(handler HandlerFunc, mw Middleware) HandlerFunc {

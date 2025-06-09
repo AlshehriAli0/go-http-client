@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"strconv"
-	"strings"
 )
 
 // New creates and returns a new App instance with initialized routes.
 func New() *App {
 	return &App{
-		routes: make(map[RouteEntry]HandlerFunc),
+		routes: make(map[string]map[Method]Route),
 	}
 }
 
@@ -55,48 +53,19 @@ func (app *App) Start(port int) {
 	if port == 0 {
 		port = 3000
 	}
+
 	fmt.Printf("Server is running on :%d with the following routes:\n", port)
-	for route := range routes {
-		fmt.Printf("- %s [%s]\n", route.pattern, route.method)
+	for _, routeNames := range routes {
+		for method, route := range routeNames {
+			fmt.Printf("- %s [%s]\n", route.pattern, method)
+		}
 	}
 
-	for route := range routes {
-		routeKey := route
-		handler := routes[routeKey]
-
-		http.HandleFunc(routeKey.routeName, func(w http.ResponseWriter, r *http.Request) {
-
-			param := make(map[string]string)
-
-			// Check if route has params
-			if strings.Contains(routeKey.pattern, "/:") {
-				paramKey := strings.Split(routeKey.pattern, "/:")[1]
-				paramValue := path.Base(r.URL.Path)
-				param[paramKey] = paramValue
-			}
-
-			ctx := &Context{
-				Writer:  w,
-				Request: r,
-				param:   param,
-			}
-
-			for _, mw := range app.middlewares {
-				mw(ctx)
-				// stop the chaining
-				if ctx.terminated {
-					return
-				}
-			}
-
-			handler(ctx)
-		})
-	}
+	// Single entry point handles all routes
+	http.HandleFunc("/", app.routeHandler)
 
 	portStr := strconv.Itoa(port)
 	if err := http.ListenAndServe(":"+portStr, nil); err != nil {
 		log.Fatal(err)
 	}
 }
-
-// app.get("name", "middleware", handler)
