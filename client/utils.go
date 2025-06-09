@@ -27,6 +27,18 @@ func (ctx *Context) Path() string {
 	return ctx.Request.URL.Path
 }
 
+func extractStaticPrefix(pattern string) string {
+	segments := strings.Split(strings.Trim(pattern, "/"), "/")
+	var static []string
+
+	for _, seg := range segments {
+		if !strings.HasPrefix(seg, ":") {
+			static = append(static, seg)
+		}
+	}
+	return "/" + strings.Join(static, "/")
+}
+
 func (app *App) routeHandler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	method := Method(r.Method)
@@ -88,7 +100,7 @@ func (ctx *Context) Method() string {
 
 // Handle registers a new route with the given method, path, middleware and handler function
 func (app *App) handle(method Method, pattern string, mw Middleware, handler HandlerFunc) {
-	route := strings.Split(pattern, ":")[0]
+	route := extractStaticPrefix(pattern)
 
 	app.appendRoute(method, route, pattern, wrapMiddleware(handler, mw))
 }
