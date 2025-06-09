@@ -12,11 +12,12 @@ type User struct {
 	Email string `json:"email"`
 }
 
-// Logger middleware prints request information
+// Logger is a middleware that prints request information to the console.
 func Logger(ctx *client.Context) {
 	fmt.Printf("New request: %s %s\n", ctx.Request.Method, ctx.Request.URL.Path)
 }
 
+// main is the entry point of the application.
 func main() {
 	// Create a new app instance
 	app := client.New()

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// appendRoute adds a new route to the application's route map, checking for duplicates
+// appendRoute adds a new route to the application's route map, checking for duplicates.
 func (app *App) appendRoute(method Method, routeName, pattern string, handler HandlerFunc) {
 	if app.routes[routeName] == nil {
 		app.routes[routeName] = make(map[Method]Route)
@@ -27,6 +27,7 @@ func (ctx *Context) Path() string {
 	return ctx.Request.URL.Path
 }
 
+// extractStaticPrefix returns the static prefix of a route pattern (ignoring parameters).
 func extractStaticPrefix(pattern string) string {
 	segments := strings.Split(strings.Trim(pattern, "/"), "/")
 	var static []string
@@ -39,6 +40,7 @@ func extractStaticPrefix(pattern string) string {
 	return "/" + strings.Join(static, "/")
 }
 
+// routeHandler is the main HTTP handler that matches incoming requests to registered routes and executes middleware and handlers.
 func (app *App) routeHandler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	method := Method(r.Method)
@@ -105,6 +107,7 @@ func (app *App) handle(method Method, pattern string, mw Middleware, handler Han
 	app.appendRoute(method, route, pattern, wrapMiddleware(handler, mw))
 }
 
+// wrapMiddleware wraps a handler with a middleware, ensuring the middleware runs before the handler and can terminate the chain.
 func wrapMiddleware(handler HandlerFunc, mw Middleware) HandlerFunc {
 	if mw == nil {
 		return handler
@@ -116,5 +119,4 @@ func wrapMiddleware(handler HandlerFunc, mw Middleware) HandlerFunc {
 			handler(ctx)
 		}
 	}
-
 }
