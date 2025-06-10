@@ -13,8 +13,9 @@ type Middleware func(*Context)
 
 // Group represents a group of routes with a common prefix, useful for modular route organization.
 type Group struct {
-	prefix string
-	app    *App
+	prefix      string
+	middlewares []Middleware
+	app         *App
 }
 
 // App is the main application struct for the HTTP client framework.

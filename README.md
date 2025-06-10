@@ -423,6 +423,15 @@ func main() {
 
 Route grouping allows you to organize related routes under a common prefix, making your codebase more modular and maintainable. Each group can have its own middleware and handlers, and is ideal for separating concerns (e.g., user routes, admin routes).
 
+**Group Middleware:**
+You can attach middleware to a group by passing it as an argument to `app.Group`. Group middleware will run after global middleware and before any route-specific middleware for all routes in that group. This allows you to apply logic (such as authentication or logging) to all routes within a group.
+
+**Middleware Execution Order:**
+1. Global middleware (`app.Use`)
+2. Group middleware (`app.Group(..., groupMiddleware)`)
+3. Route-specific middleware (passed to `.Get`, `.Post`, etc.)
+
+**Example:**
 ```go
 app := client.New()
 
@@ -431,10 +440,13 @@ app.Use(func(ctx *client.Context) {
     fmt.Printf("[LOG] %s %s\n", ctx.Method(), ctx.Path())
 })
 
-// Group for user-related routes
-userGroup := app.Group("/users")
+// Group-level middleware for user routes
+func UserMiddleware(ctx *client.Context) {
+    println("This runs on all /users routes after global middleware and before route-specific middleware")
+}
 
-// Now all routes will start with /users
+userGroup := app.Group("/users", UserMiddleware)
+
 userGroup.Get("/", nil, func(ctx *client.Context) {
     ctx.Send("List all users")
 })

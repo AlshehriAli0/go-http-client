@@ -16,6 +16,10 @@ func AuthMiddleware(ctx *client.Context) {
 	}
 }
 
+func UserMiddleware(ctx *client.Context) {
+	println("This only runs on all routes inside /user group after the global middleware and before route specific middleware")
+}
+
 func main() {
 	app := client.New()
 
@@ -25,7 +29,7 @@ func main() {
 	})
 
 	// Group for user-related routes
-	userGroup := app.Group("/users")
+	userGroup := app.Group("/users", UserMiddleware)
 
 	// Now all routes will start with /users
 	userGroup.Get("/", nil, func(ctx *client.Context) {

@@ -78,7 +78,7 @@ func (ctx *Context) Method() string {
 	return ctx.Request.Method
 }
 
-func (app *App) handle(method Method, pattern string, mw Middleware, handler HandlerFunc) {
+func (app *App) handle(method Method, pattern string, mws []Middleware, handler HandlerFunc) {
 	pattern = normalizePath(pattern)
 
 	if app.routes[pattern] == nil {
@@ -91,19 +91,37 @@ func (app *App) handle(method Method, pattern string, mw Middleware, handler Han
 
 	app.routes[pattern][method] = Route{
 		pattern: pattern,
-		handler: wrapMiddleware(handler, mw),
+		handler: wrapMiddleware(handler, mws),
 	}
 }
 
-func wrapMiddleware(handler HandlerFunc, mw Middleware) HandlerFunc {
+func combineMiddleware(base []Middleware, extra Middleware) []Middleware {
+	if extra != nil {
+		return append(base, extra)
+	}
+	return base
+}
+
+func mwToSlice(mw Middleware) []Middleware {
 	if mw == nil {
+		return nil
+	}
+	return []Middleware{mw}
+}
+
+func wrapMiddleware(handler HandlerFunc, mws []Middleware) HandlerFunc {
+	if len(mws) == 0 {
 		return handler
 	}
 
 	return func(ctx *Context) {
-		mw(ctx)
-		if !ctx.terminated {
-			handler(ctx)
+		for _, mw := range mws {
+			mw(ctx)
+			if ctx.terminated {
+				return
+			}
 		}
+		handler(ctx)
 	}
+
 }

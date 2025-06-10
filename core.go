@@ -20,8 +20,8 @@ func (app *App) Use(mw Middleware) {
 }
 
 // Group creates a new route group with the specified prefix. Useful for modular route organization.
-func (app *App) Group(prefix string) *Group {
-	return &Group{prefix: normalizePath(prefix), app: app}
+func (app *App) Group(prefix string, mws ...Middleware) *Group {
+	return &Group{prefix: normalizePath(prefix), app: app, middlewares: mws}
 }
 
 // Start begins the HTTP server on the specified port and sets up all registered routes.
